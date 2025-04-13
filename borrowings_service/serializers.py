@@ -15,5 +15,6 @@ class BorrowingSerializer(serializers.ModelSerializer):
             "book",
         )
 
+
 class BorrowingDetailSerializer(BorrowingSerializer):
-    book = books_service.serializers.BookSerializer
+    book = books_service.serializers.BookSerializer(read_only=True)
