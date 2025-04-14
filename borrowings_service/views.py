@@ -17,6 +17,9 @@ class BorrowingViewSet(
     queryset = Borrowing.objects.all().prefetch_related("book")
     serializer_class = BorrowingSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     def get_serializer_class(self):
         if self.action == "retrieve":
             return BorrowingDetailSerializer
