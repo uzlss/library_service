@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -9,6 +10,7 @@ class Borrowing(models.Model):
     expected_return_date = models.DateField()
     actual_return_date = models.DateField()
     book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     @staticmethod
     def validate_borrowing(book, error_to_raise):
