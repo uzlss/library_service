@@ -5,38 +5,35 @@ from books_service.serializers import BookSerializer
 from borrowings_service.models import Borrowing
 
 
-class BorrowingSerializer(serializers.ModelSerializer):
+DEFAULT_FIELDS = (
+    "id",
+    "borrow_date",
+    "expected_return_date",
+    "actual_return_date",
+    "book",
+)
+
+
+class BaseUserBorrowingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrowing
-        fields = (
-            "id",
-            "borrow_date",
-            "expected_return_date",
-            "actual_return_date",
-            "book",
-        )
+        fields = DEFAULT_FIELDS
+        read_only_fields = ("id", "borrow_date", "actual_return_date")
 
 
-class BorrowingAdminSerializer(serializers.ModelSerializer):
+class BaseAdminBorrowingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrowing
-        fields = (
-            "id",
-            "borrow_date",
-            "expected_return_date",
-            "actual_return_date",
-            "book",
-            "user",
-        )
+        fields = DEFAULT_FIELDS + ("user",)
 
 
-class BorrowingDetailSerializer(BorrowingAdminSerializer):
-    book = BookSerializer(read_only=True)
+class BorrowingSerializer(BaseUserBorrowingSerializer):
+    pass
 
 
 class BorrowingCreateSerializer(BorrowingSerializer):
     def validate(self, attrs):
-        data = super(BorrowingCreateSerializer, self).validate(attrs=attrs)
+        data = super().validate(attrs)
         Borrowing.validate_borrowing(
             book=attrs["book"],
             error_to_raise=serializers.ValidationError,
@@ -50,3 +47,15 @@ class BorrowingCreateSerializer(BorrowingSerializer):
             book.inventory -= 1
             book.save()
             return borrowing
+
+
+class BorrowingDetailSerializer(BaseAdminBorrowingSerializer):
+    book = BookSerializer(read_only=True)
+
+
+class BorrowingAdminSerializer(BaseAdminBorrowingSerializer):
+    pass
+
+
+class BorrowingAdminDetailSerializer(BorrowingAdminSerializer):
+    book = BookSerializer(read_only=True)
