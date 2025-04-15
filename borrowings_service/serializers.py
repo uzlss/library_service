@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 
 from books_service.serializers import BookSerializer
@@ -59,3 +60,26 @@ class BorrowingAdminSerializer(BaseAdminBorrowingSerializer):
 
 class BorrowingAdminDetailSerializer(BorrowingAdminSerializer):
     book = BookSerializer(read_only=True)
+
+
+class BorrowingReturnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrowing
+        fields = ("id", "actual_return_date")
+        read_only_fields = ("id", "actual_return_date")
+
+    def validate(self, attrs):
+        if self.instance.actual_return_date:
+            raise serializers.ValidationError(
+                "This borrowing has already been returned."
+            )
+        return attrs
+
+    def save(self, **kwargs):
+        borrowing = self.instance
+        with transaction.atomic():
+            borrowing.actual_return_date = timezone.now().date()
+            borrowing.book.inventory += 1
+            borrowing.book.save()
+            borrowing.save()
+            return borrowing
