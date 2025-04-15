@@ -5,6 +5,7 @@ from borrowings_service.serializers import (
     BorrowingDetailSerializer,
     BorrowingSerializer,
     BorrowingCreateSerializer,
+    BorrowingAdminSerializer,
 )
 
 
@@ -21,6 +22,10 @@ class BorrowingViewSet(
         serializer.save(user=self.request.user)
 
     def get_serializer_class(self):
+        if self.request.user.is_staff:
+            if self.action == "list":
+                return BorrowingAdminSerializer
+
         if self.action == "retrieve":
             return BorrowingDetailSerializer
         if self.action == "create":
@@ -39,6 +44,8 @@ class BorrowingViewSet(
 
         is_active = self.request.query_params.get("is_active")
         if is_active in ("true", "True", "1"):
-            queryset = Borrowing.objects.filter(actual_return_date__isnull=True)
+            queryset = Borrowing.objects.filter(
+                actual_return_date__isnull=True
+            )
 
         return queryset.distinct()
