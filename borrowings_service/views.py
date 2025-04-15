@@ -1,5 +1,7 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
@@ -8,6 +10,7 @@ from borrowings_service.serializers import (
     BorrowingDetailSerializer,
     BorrowingAdminSerializer,
     BorrowingAdminDetailSerializer,
+    BorrowingReturnSerializer,
 )
 
 
@@ -35,6 +38,8 @@ class BorrowingViewSet(
             return BorrowingDetailSerializer
         if self.action == "create":
             return BorrowingCreateSerializer
+        if self.action == "return_borrowing":
+            return BorrowingReturnSerializer
         return self.serializer_class
 
     def get_queryset(self):
@@ -52,3 +57,24 @@ class BorrowingViewSet(
             queryset = queryset.filter(actual_return_date__isnull=True)
 
         return queryset.distinct()
+
+    @action(detail=True, methods=["POST"], url_path="return")
+    def return_borrowing(self, request, pk=None):
+        borrowing = self.get_object()
+
+        if not request.user.is_staff and borrowing.user != request.user:
+            return Response(
+                {
+                    "detail": "You do not have permission to return this borrowing."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = self.get_serializer(borrowing, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
