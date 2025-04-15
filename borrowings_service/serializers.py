@@ -50,7 +50,7 @@ class BorrowingCreateSerializer(BorrowingSerializer):
             return borrowing
 
 
-class BorrowingDetailSerializer(BaseAdminBorrowingSerializer):
+class BorrowingDetailSerializer(BorrowingSerializer):
     book = BookSerializer(read_only=True)
 
 
