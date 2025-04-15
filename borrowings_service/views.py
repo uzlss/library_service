@@ -1,4 +1,5 @@
 from rest_framework import viewsets, mixins
+from rest_framework.permissions import IsAuthenticated
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
@@ -17,6 +18,7 @@ class BorrowingViewSet(
 ):
     queryset = Borrowing.objects.all().prefetch_related("book")
     serializer_class = BorrowingSerializer
+    permission_classes = (IsAuthenticated,)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
