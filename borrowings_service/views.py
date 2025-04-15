@@ -26,3 +26,19 @@ class BorrowingViewSet(
         if self.action == "create":
             return BorrowingCreateSerializer
         return self.serializer_class
+
+    def get_queryset(self):
+        queryset = self.queryset
+
+        if self.request.user.is_staff:
+            user_id = self.request.query_params.get("user_id")
+            if user_id:
+                queryset = Borrowing.objects.filter(user_id=user_id)
+        else:
+            queryset = Borrowing.objects.filter(user=self.request.user)
+
+        is_active = self.request.query_params.get("is_active")
+        if is_active in ("true", "True", "1"):
+            queryset = Borrowing.objects.filter(actual_return_date__isnull=True)
+
+        return queryset.distinct()
