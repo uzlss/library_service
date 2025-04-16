@@ -20,10 +20,10 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/books/", include("books_service.urls", namespace="books")),
+    path("api/books/", include("books.urls", namespace="books")),
     path(
         "api/borrowings/",
-        include("borrowings_service.urls", namespace="borrowings"),
+        include("borrowings.urls", namespace="borrowings"),
     ),
-    path("api/users/", include("users_service.urls", namespace="users")),
+    path("api/users/", include("users.urls", namespace="users")),
 ] + debug_toolbar_urls()

@@ -43,10 +43,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'debug_toolbar',
-    'users_service',
-    'books_service',
-    'borrowings_service',
-    'telegram_service',
+    'users',
+    'books',
+    'borrowings',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -133,7 +133,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'users_service.User'
+AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

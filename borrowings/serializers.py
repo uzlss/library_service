@@ -2,9 +2,9 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
-from books_service.serializers import BookSerializer
-from borrowings_service.models import Borrowing
-from telegram_service.tasks import send_telegram_message_task
+from books.serializers import BookSerializer
+from borrowings.models import Borrowing
+from notifications.tasks import send_telegram_message_task
 
 
 DEFAULT_FIELDS = (

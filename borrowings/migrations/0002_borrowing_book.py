@@ -7,8 +7,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("books_service", "0002_alter_book_inventory"),
-        ("borrowings_service", "0001_initial"),
+        ("books", "0002_alter_book_inventory"),
+        ("borrowings", "0001_initial"),
     ]
 
     operations = [
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="books_service.book",
+                to="books.book",
             ),
         ),
     ]

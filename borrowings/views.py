@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from borrowings_service.models import Borrowing
-from borrowings_service.serializers import (
+from borrowings.models import Borrowing
+from borrowings.serializers import (
     BorrowingSerializer,
     BorrowingCreateSerializer,
     BorrowingDetailSerializer,

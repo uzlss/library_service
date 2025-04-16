@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("borrowings_service", "0003_alter_borrowing_borrow_date"),
+        ("borrowings", "0003_alter_borrowing_borrow_date"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
