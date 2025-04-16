@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'users_service',
     'books_service',
     'borrowings_service',
+    'telegram_service',
 ]
 
 MIDDLEWARE = [
