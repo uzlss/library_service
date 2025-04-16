@@ -56,7 +56,11 @@ class BorrowingViewSet(
 
         if self.request.query_params.get("is_active") in ("true", "True", "1"):
             queryset = queryset.filter(actual_return_date__isnull=True)
-        elif self.request.query_params.get("is_active") in ("false", "False", "0"):
+        elif self.request.query_params.get("is_active") in (
+            "false",
+            "False",
+            "0",
+        ):
             queryset = queryset.filter(actual_return_date__isnull=False)
 
         return queryset.distinct()
@@ -68,7 +72,9 @@ class BorrowingViewSet(
         if not request.user.is_staff and borrowing.user != request.user:
             return Response(
                 {
-                    "detail": "You do not have permission to return this borrowing."
+                    "detail": (
+                        "You do not have permission to return this borrowing."
+                    )
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -88,14 +94,15 @@ class BorrowingViewSet(
                 name="user_id",
                 type=int,
                 description="(Admin only) Filter by user id (ex: ?user_id=1)",
-                required=False
+                required=False,
             ),
             OpenApiParameter(
                 name="is_active",
                 type=bool,
-                description="Filter by return status (ex: ?is_active=1, ?is_active=False)",
-                required=False
-            )
+                description="Filter by return status"
+                            " (ex: ?is_active=1, ?is_active=False)",
+                required=False,
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
