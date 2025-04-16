@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-from books_service.models import Book
+from books.models import Book
 
 
 class Borrowing(models.Model):
