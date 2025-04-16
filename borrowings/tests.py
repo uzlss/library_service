@@ -1,5 +1,5 @@
 from decimal import Decimal
-from http.client import responses
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -12,6 +12,7 @@ from books.models import Book
 from borrowings.models import Borrowing
 
 
+@patch("notifications.tasks.send_telegram_message_task.delay")
 class BorrowingTests(TestCase):
     def setUp(self):
         User = get_user_model()
@@ -71,7 +72,7 @@ class BorrowingTests(TestCase):
         self.list_url = reverse("borrowings:borrowing-list")
         self.detail_url = reverse("borrowings:borrowing-detail", args=[self.borrowing1.id])
 
-    def test_auth_required(self):
+    def test_auth_required(self, mock_delay):
         list_response = self.client.get(self.list_url)
 
         detail_response = self.client.get(self.detail_url)
@@ -82,7 +83,7 @@ class BorrowingTests(TestCase):
         for response in (list_response, detail_response, create_response):
             self.assertEqual(response.status_code, 401)
 
-    def test_non_staff_can_see_only_their_borrowings(self):
+    def test_non_staff_can_see_only_their_borrowings(self, mock_delay):
 
         response = self.user_client1.get(self.list_url)
         self.assertEqual(response.status_code, 200)
@@ -95,7 +96,7 @@ class BorrowingTests(TestCase):
         detail_response = self.user_client1.get(other_detail_url)
         self.assertEqual(detail_response.status_code, 404)
 
-    def test_staff_can_see_all_borrowings(self):
+    def test_staff_can_see_all_borrowings(self, mock_delay):
         response = self.admin_client.get(self.list_url)
         self.assertEqual(response.status_code, 200)
 
@@ -104,7 +105,7 @@ class BorrowingTests(TestCase):
         self.assertIn(self.borrowing1.id, ids)
         self.assertIn(self.borrowing2.id, ids)
 
-    def test_staff_can_filter_by_user_id(self):
+    def test_staff_can_filter_by_user_id(self, mock_delay):
         response = self.admin_client.get(self.list_url, {"user_id": self.user1.id})
         self.assertEqual(response.status_code, 200)
 
@@ -113,7 +114,7 @@ class BorrowingTests(TestCase):
             self.assertEqual(i.get("user"), self.user1.id)
         self.assertEqual({item["id"] for item in filtered}, {self.borrowing1.id})
 
-    def test_is_active_filtering(self):
+    def test_is_active_filtering(self, mock_delay):
         self.borrowing1.actual_return_date = timezone.now().date()
         self.borrowing1.save()
 
@@ -125,3 +126,56 @@ class BorrowingTests(TestCase):
         for item in filtered:
             borrowing_obj = Borrowing.objects.get(id=item["id"])
             self.assertIsNone(borrowing_obj.actual_return_date)
+
+    def test_borrowings_decrease_book_inventory(self, mock_delay):
+        inventory = self.book.inventory
+        borrowing_data = {
+            "book": self.book.id,
+            "expected_return_date": (
+                (timezone.now() + timezone.timedelta(days=1)
+                 ).date()).isoformat(),
+        }
+
+        response = self.user_client1.post(self.list_url, borrowing_data, content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+
+        new_borrowing_id = response.json().get("id")
+        new_borrowing = Borrowing.objects.get(id=new_borrowing_id)
+        self.assertEqual(new_borrowing.user, self.user1)
+
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.inventory, inventory - 1)
+
+    def test_cannot_create_borrowing_when_book_inventory_equal_to_0(self, mock_delay):
+        self.book.inventory = 0
+        self.book.save()
+        borrowing_data = {
+            "book": self.book.id,
+            "expected_return_date": (
+                (timezone.now() + timezone.timedelta(days=1)
+                 ).date()).isoformat(),
+        }
+        response = self.user_client1.post(self.list_url, borrowing_data, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+        error = response.json()
+        self.assertIn("inventory", error)
+
+    def test_return_borrowing_endpoint(self, mock_delay):
+        self.assertIsNone(self.borrowing1.actual_return_date)
+        inventory = self.borrowing1.book.inventory
+
+        return_url = reverse("borrowings:borrowing-return-borrowing", args=[self.borrowing1.id])
+        response = self.user_client1.post(return_url, {})
+        self.assertEqual(response.status_code, 200)
+
+        self.borrowing1.refresh_from_db()
+        self.assertIsNotNone(self.borrowing1.actual_return_date)
+        self.assertEqual(self.borrowing1.book.inventory, inventory + 1)
+
+        response = self.user_client1.post(return_url, {})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("This borrowing has already been returned.", str(response.json()))
+
+        return_url = reverse("borrowings:borrowing-return-borrowing", args=[self.borrowing2.id])
+        response = self.user_client1.post(return_url, {})
+        self.assertNotEqual(response.status_code, 200)
