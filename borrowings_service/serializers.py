@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from books_service.serializers import BookSerializer
 from borrowings_service.models import Borrowing
+from telegram_service.tasks import send_telegram_message_task
 
 
 DEFAULT_FIELDS = (
@@ -47,6 +48,15 @@ class BorrowingCreateSerializer(BorrowingSerializer):
             book = validated_data["book"]
             book.inventory -= 1
             book.save()
+
+            user = borrowing.user
+            send_telegram_message_task.delay(
+                f"📚 <b>New Borrowing Created</b>\n"
+                f"👤 <b>User:</b> ({user.email})\n"
+                f"📖 <b>Book:</b> {book.title}\n"
+                f"📅 <b>Return by:</b> {borrowing.expected_return_date}"
+            )
+
             return borrowing
 
 
