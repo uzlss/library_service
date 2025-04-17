@@ -25,6 +25,8 @@ class Borrowing(models.Model):
 
     @staticmethod
     def validate_borrowing(book, error_to_raise):
+        if not book:
+            raise error_to_raise({"book": "Book must be provided."})
         if book.inventory < 1:
             raise error_to_raise(
                 {
