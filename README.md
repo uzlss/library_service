@@ -6,13 +6,14 @@ A Django-based backend application for managing a book borrowing system with int
 
 ## 🚀 Features
 
-- 📖 Book and borrowing management
+- 📖 Book catalog with cover type, inventory, and daily fee
 - 👤 User-specific borrowing history
 - ✅ Admin functionality for all borrowings
 - 🔔 Telegram bot notifications on borrowing creation
 - ⏱ Asynchronous task queue with Celery + Redis
 - 🔒 JWT authentication
 - 🧪 Test coverage for key business logic
+- 🐳 Dockerized setup with Postgres, Redis, Django and Celery
 
 ---
 
@@ -45,9 +46,16 @@ pip install -r requirements.txt
 Copy `.env.sample` → `.env` and fill in values:
 
 ```env
-SECRET_KEY=your-django-secret
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-TELEGRAM_CHAT_ID=your-group-or-channel-id
+POSTGRES_PASSWORD=POSTGRES_PASSWORD
+POSTGRES_USER=POSTGRES_USER
+POSTGRES_DB=POSTGRES_DB
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+PGDATA=/var/lib/postgresql/data
+TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID=TELEGRAM_CHAT_ID
+SECRET_KEY=SECRET_KEY
+REDIS_HOST=redis://redis:6379/0
 ```
 
 ---
@@ -59,7 +67,7 @@ Example message:
 
 ```
 📚 Borrowing Created
-👤 User: Igor (igor@example.com)
+👤 User: (igor@example.com)
 📖 Book: The Pragmatic Programmer
 📅 Expected Return: 2025-04-30
 ```
@@ -69,24 +77,42 @@ Example message:
 
 ### 1. Start Redis (if not running):
 
-```bash
+```sh
 docker run -d -p 6379:6379 redis
 ```
 
 ### 2. Start the Celery worker:
 
-```bash
+```sh
 celery -A library_service worker --loglevel=info --pool=solo
 ```
 
 > ⚠️ On Windows, you must use `--pool=solo`
 
 ---
+
+## 🧵 Running with Docker + Celery
+
+### Start everything
+
+```bash
+docker-compose up --build
+```
+
+### Services included
+
+- Django app on `localhost:8000`
+- PostgreSQL
+- Redis
+- Celery worker (auto-handles Telegram messages)
+
+---
 ## 📦 Stack
 
 - Django + DRF
-- SQLite
+- PostgreSQL or SQLite
 - Celery + Redis
 - Telegram Bot API
+- Docker
 
 ---
