@@ -31,7 +31,7 @@ platformdirs==4.3.7
 prompt_toolkit==3.0.51
 pycodestyle==2.13.0
 pyflakes==3.3.2
-PyJWT==2.10.1
+PyJWT==2.9.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 PyYAML==6.0.2
@@ -47,3 +47,5 @@ uritemplate==4.1.1
 urllib3==2.4.0
 vine==5.1.0
 wcwidth==0.2.13
+psycopg==3.2.6
+psycopg-binary==3.2.6
