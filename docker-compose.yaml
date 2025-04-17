@@ -24,6 +24,23 @@ services:
     volumes:
       - my_db:$PGDATA
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    working_dir: /app
+    user: django-user
+    restart: always
+    command: >
+      sh -c "celery -A library_service worker --loglevel=info --pool=solo"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
 volumes:
   my_db:
   my_media:
